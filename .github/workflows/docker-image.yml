@@ -1,4 +1,4 @@
-name: Docker Multi-Arch
+name: Docker Multi-Arch Build & Push
 
 on:
   push:
@@ -11,9 +11,8 @@ env:
   PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
-    environment: docker
     permissions:
       contents: read
       packages: write
@@ -36,12 +35,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build & push multi-arch image
+      # Build and push multi-arch image
       - uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           platforms: ${{ env.PLATFORMS }}
+          build-args: |
+            TARGETOS=linux
           tags: |
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
             docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest

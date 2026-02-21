@@ -1,35 +1,26 @@
-# Dockerfile
-# Multi-arch builder for xray-knife
-
-# Base Go image
+# ---- Builder ----
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
+RUN apk add --no-cache git
 
-# Install git & bash for build.sh
-RUN apk add --no-cache git bash
-
-# Copy go modules and download dependencies first for caching
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code and build script
 COPY . .
 
-RUN chmod +x build.sh
+ARG TARGETOS
+ARG TARGETARCH
 
-# Accept build args from GitHub Actions / docker buildx
-ARG TARGETOS=linux
-ARG TARGETARCH=amd64
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -ldflags="-s -w" -o xray-knife
 
-# Run build.sh with correct platform/arch
-RUN ./build.sh $TARGETOS $TARGETARCH
+# ---- Runtime ----
+FROM alpine:latest
 
-# Minimal runtime image
-FROM alpine:3.22 AS runtime
+RUN apk add --no-cache ca-certificates
 WORKDIR /app
 
-# Copy the built binary from builder
-#COPY --from=builder /app/build/xray-knife-$TARGETARCH /app/xray-knife
-COPY --from=builder /app/build/xray-knife /app/xray-knife
-ENTRYPOINT ["./xray-knife"]
+COPY --from=builder /app/xray-knife /usr/local/bin/xray-knife
+
+ENTRYPOINT ["xray-knife"]

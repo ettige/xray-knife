@@ -1,25 +1,27 @@
-# ---- Base builder ----
-FROM golang:1.26-alpine AS builder
+FROM golang:1.26.7-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
 RUN apk add --no-cache git bash
 
-# Copy source code and build script
+# Copy dependencies first
 COPY go.mod go.sum ./
-COPY main.go ./
-COPY build.sh ./
+RUN go mod download
 
-# Make build.sh executable
+# Copy full source
+COPY . .
+
+# Make build script executable
 RUN chmod +x build.sh
 
-# Build for a single target architecture (passed as ARG)
+# Accept build args
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
+
+# Build binary for this platform
 RUN ./build.sh $TARGETOS $TARGETARCH
 
-# ---- Optional: minimal runtime image ----
+# Minimal runtime image
 FROM alpine:3.21 AS runtime
 WORKDIR /app
 COPY --from=builder /app/build/xray-knife-linux-$TARGETARCH /app/xray-knife

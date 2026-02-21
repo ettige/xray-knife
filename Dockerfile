@@ -5,7 +5,7 @@ WORKDIR /app
 RUN apk add --no-cache git
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN rm -rf /go/pkg/mod && go clean -modcache && go mod download
 
 COPY . .
 

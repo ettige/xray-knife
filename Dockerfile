@@ -30,6 +30,6 @@ FROM alpine:3.22 AS runtime
 WORKDIR /app
 
 # Copy the built binary from builder
-COPY --from=builder /app/build/xray-knife-$TARGETARCH /app/xray-knife
-
+#COPY --from=builder /app/build/xray-knife-$TARGETARCH /app/xray-knife
+COPY --from=builder /app/build/xray-knife /app/xray-knife
 ENTRYPOINT ["./xray-knife"]

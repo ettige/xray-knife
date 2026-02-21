@@ -1,9 +1,10 @@
 name: Docker Multi-Arch
 
+# on:
+#   push:
+#     tags:
+#       - 'v*'
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
 # on:
 #   push:
